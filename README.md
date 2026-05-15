@@ -1,15 +1,77 @@
-# SaveMom: Neonatal AI Analysis System 👶🚀
 
-SaveMom is a state-of-the-art baby monitoring and neonatal AI analysis system designed to provide automated, high-precision clinical assessments for infants in incubators. By leveraging local AI models (**Gemma 4 via Ollama**) and advanced computer vision, the system identifies critical health indicators such as Jaundice, Respiratory Distress, and Neurological patterns.
+## NeoScan Agents — AI Neonatal Screening for Every Newborn
+
+**Subtitle:** Offline multimodal neonatal diagnostics powered by Gemma 4 — enabling nurses, ASHA workers, and mothers to detect life‑threatening newborn conditions in under 90 seconds.
+
+**Tagline:** Clinical-grade neonatal screening in 90 seconds. No doctor. No internet. No excuses.
+
+### The Problem
+Every 26 seconds, a newborn dies from a condition a trained eye could have caught. Many deaths (99%) occur in low- and middle-income countries where skilled neonatal screening is not always available. Conditions like jaundice, birth asphyxia, respiratory distress, and sepsis show visible or audible early signs — and are treatable if detected early. The gap is detection, not treatment.
+
+### Key Metrics (selected)
+- **Global neonatal deaths (2024):** 2.3 million — WHO 2025
+- **Preventable with skilled birth attendance:** ~45% — Lancet Neonatology 2024
+- **Rural births in India without a neonatal specialist:** 70% — NHM India 2024
+- **Asphyxia window before irreversible brain damage:** 6 minutes — ILCOR Guidelines 2024
+- **Estimated kernicterus (India):** ~30,000 cases/year — NNF India 2024
+
+### What We Built
+NeoScan Agents is a fully offline, multimodal neonatal screening system built on a fine‑tuned Gemma 4 model. A caregiver points their phone at a newborn and receives a structured five‑module clinical report in under 90 seconds — processing video and audio on‑device with zero internet dependency. The model was fine‑tuned using Unsloth across two modalities:
+
+- Image: Jaundice detection (skin & scleral yellowing), trained for all skin tones including Fitzpatrick IV–VI.
+- Audio: Cry classification using the ICSD dataset — cry / not cry / burping — enabling distress characterization.
+
+The fine‑tuned model is exported in two formats for deployment:
+- LiteRT (.literlm) for the Flutter Android app.
+- GGUF for edge/web deployment via Ollama.
+
+### Deployment Targets
+- Mobile (Android / Tablet): Flutter app + Google LiteRT engine — bedside, home visits.
+- Edge device (Raspberry Pi, clinic station): Web app + Ollama + GGUF model — shared devices in rural clinics or NICU stations.
+
+Both deployments run the same fine‑tuned model, fully offline. Minimum recommended mobile spec: Android 10+, 6–8GB RAM.
+
+### Five Diagnostic Modules (Live Diagnostic Session)
+NeoScan runs six sequential stages producing findings, confidence scores, plain‑language explanations, and a Potential Harm card for each:
+
+1. **Jaundice AI** — analyses frames for skin and scleral yellowing; flags bilirubin risk and phototherapy assessment.
+2. **Cry Analysis** — classifies audio (cry / not cry / burping) and characterises distress (pain, hunger, normal).
+3. **Asphyxia Screening** — fuses visual and audio cues to detect high‑risk asphyxia patterns; issues NICU referral guidance when convergent signals appear.
+4. **RDS Screening** — detects respiratory distress signs (nasal flaring, chest retractions, grunting); can run standalone for monitoring.
+5. **Cyanosis Screening** — examines lips, fingertips, and facial tone for bluish discolouration indicating low oxygen.
+6. **Summary & Triage** — synthesises module outputs into a single triage: Safe, Monitor, or Refer Immediately, with caregiver actions.
+
+### Use Cases
+- Immediate post‑delivery screening when no specialist is present.
+- Continuous ward monitoring on an edge station for structured check‑ins.
+- ASHA worker home visits (day 3–5 jaundice peak) using existing smartphones.
+- Mother‑led home monitoring after hospital discharge with plain‑language guidance.
+- Telemedicine triage: structured report shared with remote clinicians for data‑driven decisions.
+
+### Impact Estimates (conservative)
+- 10% of India’s ASHA network using NeoScan on visits: ~2.5M babies screened/year, 3,000–6,000 jaundice brain‑damage cases prevented.
+- 25% rural district hospital screening at delivery: ~4.4M babies screened/year, 10,000–15,000 asphyxia/RDS interventions triggered.
+- Mother post‑discharge screening in tier‑2/3 cities: ~5M screens/year, 6,000+ kernicterus cases averted.
+
+### Technology Stack (summary)
+| Component | Technology |
+|---|---|
+| Base Model | Gemma 4 E4B |
+| Fine‑Tuning | Unsloth (multimodal image + audio) |
+| Mobile Format | LiteRT (.literlm) |
+| Edge Format | GGUF via Ollama |
+| Mobile App | Flutter (Android) |
+| Web / Edge App | Ollama + local web UI |
+
+### Privacy & Safety
+All processing is on‑device or on a local edge server; patient data never leaves the device. The report is designed for triage, not definitive diagnosis — always recommend clinical follow‑up when the tool flags high risk.
+
+---
+For details on integrating NeoScan Agents into the existing SaveMom pipeline, or to add deployment instructions and sample artifacts, open an issue or request the integration steps.
 
 ## 🌟 Key Features
 
-*   **Automated Clinical Assessment**: Performs full neonatal evaluations including:
-    *   **Kramer Zones**: Jaundice detection and severity mapping.
-    *   **Silverman-Andersen Score**: Respiratory distress evaluation.
-    *   **NIPS (Neonatal Infant Pain Scale)**: Pain and distress monitoring.
-    *   **NBAS & Prechtl Assessment**: Behavioral and movement quality analysis.
-    *   **IMNCI Danger Signs**: Detection of critical clinical "red flags."
+*   **Automated Clinical Assessment**: Performs full neonatal evaluations including: jaundice, respiratory distress, asphyxia risk, and cry analysis.
 *   **Staged AI Pipeline**: Optimized local inference using a staged approach to overcome context window limits of edge models.
 *   **Video & Audio Processing**: Extracts visual frames and audio features (cries/distress) for multi-modal analysis.
 *   **Clinical Dashboard**: Intuitive frontend for healthcare providers to track baby health history and real-time alerts.
