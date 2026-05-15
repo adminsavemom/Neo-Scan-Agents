@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'pages/home_page.dart';
 import 'controllers/ai_controller.dart';
-
+import 'controllers/litert_controller.dart';
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +19,7 @@ void main() async {
 
     await GetStorage.init();
     Get.put(AiController());
+    Get.put(LitertController());
     runApp(const MyApp());
   } catch (e) {
     debugPrint("Critical startup error: $e");

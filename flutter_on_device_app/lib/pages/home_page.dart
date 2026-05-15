@@ -7,6 +7,7 @@ import 'asphyxia_analyzer_page.dart';
 import 'rds_analyzer_page.dart';
 import 'agent_page.dart';
 import 'ai_config_page.dart';
+import 'litert_tester_page.dart';
 import 'video_input_page.dart';
 
 class HomePage extends StatelessWidget {
@@ -179,17 +180,35 @@ class HomePage extends StatelessWidget {
             ),
           ],
         ),
-        IconButton(
-          onPressed: () => Get.to(() => AiConfigPage()),
-          icon: const Icon(Icons.settings_rounded),
-          style: IconButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.blueGrey[600],
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: const BorderSide(color: Color(0xFFE2E8F0)),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              onPressed: () => Get.to(() => LitertTesterPage()),
+              icon: const Icon(Icons.science_rounded),
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.purple[600],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: const BorderSide(color: Color(0xFFE2E8F0)),
+                ),
+              ),
             ),
-          ),
+            const SizedBox(width: 8),
+            IconButton(
+              onPressed: () => Get.to(() => AiConfigPage()),
+              icon: const Icon(Icons.settings_rounded),
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.blueGrey[600],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: const BorderSide(color: Color(0xFFE2E8F0)),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );

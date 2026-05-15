@@ -34,7 +34,7 @@ class AiController extends GetxController {
     if (storedPath.isNotEmpty) {
       modelPath.value = storedPath;
       // Removed loadModel(stored) to prevent loading on app open
-      loadModel(storedPath);
+      // loadModel(storedPath);
     }
 
     final storedBackend = _storage.read<String>(_kBackendKey) ?? 'GPU';
@@ -90,7 +90,7 @@ class AiController extends GetxController {
         supportImage: true,
         supportAudio: true,
         preferredBackend: _getPreferredBackend(),
-        enableSpeculativeDecoding:true
+        enableSpeculativeDecoding: true,
       );
 
       isModelLoaded.value = true;
@@ -210,6 +210,7 @@ class AiController extends GetxController {
 
       response.value = streamingResponse.value;
     } catch (e) {
+      print(e);
       response.value = 'Inference error: $e';
       Get.snackbar(
         'Inference Error',
