@@ -10,7 +10,7 @@ import 'package:video_player/video_player.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:path_provider/path_provider.dart';
 import 'ai_config_page.dart';
-import '../controllers/ai_controller.dart';
+import '../controllers/litert_controller.dart';
 
 class BaseAnalyzerPage extends StatefulWidget {
   final String title;
@@ -41,7 +41,7 @@ class BaseAnalyzerPage extends StatefulWidget {
 }
 
 class _BaseAnalyzerPageState extends State<BaseAnalyzerPage> {
-  final AiController aiController = Get.find<AiController>();
+  final LitertController aiController = Get.find<LitertController>();
   File? _selectedFile;
   File? _extractedAudioFile;
   File? _extractedFrameFile;

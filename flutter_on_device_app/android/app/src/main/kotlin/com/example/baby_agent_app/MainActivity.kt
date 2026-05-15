@@ -88,7 +88,7 @@ class MainActivity: FlutterActivity() {
                     modelPath = path,
                     backend = backend,
                     visionBackend = backend,
-                    audioBackend = backend
+                    audioBackend = Backend.CPU()
                 )
                 
                 val newEngine = Engine(engineConfig)

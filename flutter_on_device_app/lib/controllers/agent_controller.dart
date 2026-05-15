@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_new/return_code.dart';
-import 'ai_controller.dart';
+import 'litert_controller.dart';
 
 class AnalysisStep {
   final String id;
@@ -72,7 +72,7 @@ class ChatMessage {
 }
 
 class AgentController extends GetxController {
-  final AiController aiController = Get.find<AiController>();
+  final LitertController aiController = Get.find<LitertController>();
 
   final RxList<AnalysisStep> steps = <AnalysisStep>[
     AnalysisStep(id: 'jaundice', label: 'Jaundice', description: 'Bilirubin', icon: Icons.search_rounded, mode: 'visual'),

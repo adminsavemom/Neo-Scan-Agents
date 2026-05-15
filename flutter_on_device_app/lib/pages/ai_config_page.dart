@@ -2,10 +2,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
-import '../controllers/ai_controller.dart';
+import '../controllers/litert_controller.dart';
 
 class AiConfigPage extends StatelessWidget {
-  final AiController controller = Get.find<AiController>();
+  final LitertController controller = Get.find<LitertController>();
   final TextEditingController _promptController = TextEditingController();
 
   // Reactive file selections (not in controller since they're view-only state).
@@ -194,7 +194,7 @@ class AiConfigPage extends StatelessWidget {
         ),
       );
 
-  Widget _statusCard(AiController c) => Card(
+  Widget _statusCard(LitertController c) => Card(
         elevation: 0,
         color: Colors.white,
         shape: RoundedRectangleBorder(

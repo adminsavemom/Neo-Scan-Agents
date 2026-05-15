@@ -133,6 +133,8 @@ class LitertController extends GetxController {
     streamingResponse.value = '';
     response.value = '';
 
+    final completer = Completer<void>();
+
     try {
       // Set up listener for streaming
       _streamSubscription?.cancel();
@@ -145,14 +147,18 @@ class LitertController extends GetxController {
         } else if (event is Map) {
           if (event['status'] == 'done') {
             isLoading.value = false;
+            if (!completer.isCompleted) completer.complete();
           } else if (event['status'] == 'error') {
             Get.snackbar(
               'Inference Error',
               event['message'] ?? 'Unknown error',
             );
             isLoading.value = false;
+            if (!completer.isCompleted) completer.completeError(event['message'] ?? 'Unknown error');
           }
         }
+      }, onError: (error) {
+        if (!completer.isCompleted) completer.completeError(error);
       });
 
       await _methodChannel.invokeMethod('runInference', {
@@ -161,10 +167,13 @@ class LitertController extends GetxController {
         'audioPath': audio?.path,
         'systemInstructions': systemInstructions,
       });
+
+      await completer.future;
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
       response.value = 'Inference error: $e';
       isLoading.value = false;
+      if (!completer.isCompleted) completer.completeError(e);
       Get.snackbar(
         'Inference Error',
         e.toString(),

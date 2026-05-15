@@ -1,19 +1,17 @@
-import 'package:baby_agent_app/controllers/ai_controller.dart';
+import 'package:baby_agent_app/controllers/litert_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'jaundice_analyzer_page.dart';
 import 'cry_analyzer_page.dart';
 import 'asphyxia_analyzer_page.dart';
 import 'rds_analyzer_page.dart';
-import 'agent_page.dart';
 import 'ai_config_page.dart';
-import 'litert_tester_page.dart';
 import 'video_input_page.dart';
 
 class HomePage extends StatelessWidget {
   HomePage({super.key});
 
-  final aiController = Get.put(AiController());
+  final aiController = Get.find<LitertController>();
 
   @override
   Widget build(BuildContext context) {
@@ -183,18 +181,6 @@ class HomePage extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              onPressed: () => Get.to(() => LitertTesterPage()),
-              icon: const Icon(Icons.science_rounded),
-              style: IconButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.purple[600],
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: const BorderSide(color: Color(0xFFE2E8F0)),
-                ),
-              ),
-            ),
             const SizedBox(width: 8),
             IconButton(
               onPressed: () => Get.to(() => AiConfigPage()),
