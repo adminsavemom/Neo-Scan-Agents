@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -7,18 +8,24 @@ import 'package:get_storage/get_storage.dart';
 import 'package:path_provider/path_provider.dart';
 
 class LitertController extends GetxController {
-  // ─── Persistence ───────────────────────────────────────────────────────────
-  static const _kModelPathKey = 'litert_model_path';
+  // ─── Constants ─────────────────────────────────────────────────────────────
+  static const _modelUrl = 'https://download.savemom.app/4b.litertlm';
+  static const _modelFilename = '4b.litertlm';
   static const _kBackendKey = 'litert_preferred_backend';
+
   final _storage = GetStorage();
+  final _dio = Dio();
 
   // ─── Observable state ──────────────────────────────────────────────────────
   final modelPath = ''.obs;
   final isModelLoaded = false.obs;
   final isLoading = false.obs;
+  final isDownloading = false.obs;
+  final downloadProgress = 0.0.obs;  // 0.0 – 1.0
+  final downloadStatus = ''.obs;     // human-readable status message
   final response = ''.obs;
   final streamingResponse = ''.obs;
-  final selectedBackend = 'CPU'.obs;
+  final selectedBackend = 'GPU'.obs;
 
   // ─── Method Channels ──────────────────────────────────────────────────────
   static const MethodChannel _methodChannel = MethodChannel(
@@ -35,14 +42,11 @@ class LitertController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    final storedPath = _storage.read<String>(_kModelPathKey) ?? '';
-    if (storedPath.isNotEmpty) {
-      modelPath.value = storedPath;
-      loadModel(storedPath);
-    }
-
-    final storedBackend = _storage.read<String>(_kBackendKey) ?? 'GPU';
+    final storedBackend = _storage.read<String>(_kBackendKey) ?? 'CPU';
     selectedBackend.value = storedBackend;
+
+    // Kick off model download/load automatically.
+    _ensureModelReady();
   }
 
   @override
@@ -52,12 +56,61 @@ class LitertController extends GetxController {
     super.onClose();
   }
 
-  // ─── Public: model management ──────────────────────────────────────────────
+  // ─── Model bootstrap ──────────────────────────────────────────────────────
 
-  Future<void> setModelPath(String path) async {
-    modelPath.value = path;
-    await _storage.write(_kModelPathKey, path);
+  Future<void> _ensureModelReady() async {
+    final dir = await getApplicationDocumentsDirectory();
+    final modelFile = File('${dir.path}/$_modelFilename');
+
+    if (await modelFile.exists()) {
+      // Already downloaded – just load it.
+      downloadStatus.value = 'Model found locally.';
+      modelPath.value = modelFile.path;
+      await loadModel(modelFile.path);
+    } else {
+      await _downloadModel(modelFile);
+    }
   }
+
+  Future<void> _downloadModel(File dest) async {
+    isDownloading.value = true;
+    downloadProgress.value = 0.0;
+    downloadStatus.value = 'Starting download…';
+
+    try {
+      await _dio.download(
+        _modelUrl,
+        dest.path,
+        onReceiveProgress: (received, total) {
+          if (total > 0) {
+            downloadProgress.value = received / total;
+            final mb = (received / 1024 / 1024).toStringAsFixed(1);
+            final totalMb = (total / 1024 / 1024).toStringAsFixed(1);
+            downloadStatus.value = 'Downloading: $mb / $totalMb MB';
+          }
+        },
+      );
+
+      downloadStatus.value = 'Download complete. Loading model…';
+      downloadProgress.value = 1.0;
+      modelPath.value = dest.path;
+      await loadModel(dest.path);
+    } catch (e) {
+      downloadStatus.value = 'Download failed: $e';
+      debugPrint('Model download error: $e');
+      // Delete partial file if present.
+      if (await dest.exists()) await dest.delete();
+      Get.snackbar(
+        'Download Failed',
+        e.toString(),
+        duration: const Duration(seconds: 6),
+      );
+    } finally {
+      isDownloading.value = false;
+    }
+  }
+
+  // ─── Public: model management ──────────────────────────────────────────────
 
   Future<void> setBackend(String backend) async {
     selectedBackend.value = backend;
@@ -78,6 +131,7 @@ class LitertController extends GetxController {
 
       if (success == true) {
         isModelLoaded.value = true;
+        downloadStatus.value = 'Model ready ✓';
       } else {
         isModelLoaded.value = false;
         Get.snackbar('Error', 'Failed to load model from native side');
@@ -103,7 +157,8 @@ class LitertController extends GetxController {
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/$filename');
       await file.writeAsBytes(modelData);
-      await setModelPath(file.path);
+      modelPath.value = file.path;
+      await loadModel(file.path);
     } catch (e) {
       Get.snackbar('Error', 'Failed to load model from memory: $e');
     } finally {
@@ -125,7 +180,7 @@ class LitertController extends GetxController {
 
     if (!isModelLoaded.value) {
       response.value =
-          'Model not loaded. Please select and load a model first.';
+          'Model not loaded. Please wait for the model to finish downloading and loading.';
       return;
     }
 
@@ -136,7 +191,6 @@ class LitertController extends GetxController {
     final completer = Completer<void>();
 
     try {
-      // Set up listener for streaming
       _streamSubscription?.cancel();
       _streamSubscription = _eventChannel.receiveBroadcastStream().listen((
         event,
@@ -154,7 +208,9 @@ class LitertController extends GetxController {
               event['message'] ?? 'Unknown error',
             );
             isLoading.value = false;
-            if (!completer.isCompleted) completer.completeError(event['message'] ?? 'Unknown error');
+            if (!completer.isCompleted) {
+              completer.completeError(event['message'] ?? 'Unknown error');
+            }
           }
         }
       }, onError: (error) {

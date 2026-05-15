@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:file_picker/file_picker.dart';
 import '../controllers/litert_controller.dart';
 
 class AiConfigPage extends StatelessWidget {
@@ -33,36 +32,6 @@ class AiConfigPage extends StatelessWidget {
             _sectionTitle('Model Status'),
             const SizedBox(height: 8),
             Obx(() => _statusCard(controller)),
-            const SizedBox(height: 24),
-
-            // ── Model Selection ────────────────────────────────────────────
-            _sectionTitle('Model Selection'),
-            const SizedBox(height: 8),
-            _filePicker(
-              label: 'Select Model File',
-              hint: '.task  ·  .litertlm  ·  .bin',
-              icon: Icons.memory_rounded,
-              color: Colors.cyan[700]!,
-              onTap: _pickModel,
-            ),
-            const SizedBox(height: 12),
-            Obx(() => SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: controller.modelPath.value.isEmpty || controller.isLoading.value
-                    ? null
-                    : () => controller.loadModel(controller.modelPath.value),
-                icon: controller.isLoading.value
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.download_rounded),
-                label: Text(controller.isModelLoaded.value ? 'Reload Model' : 'Load Model'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal[600],
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-            )),
             const SizedBox(height: 24),
 
             // ── Backend Selection ──────────────────────────────────────────
@@ -194,59 +163,94 @@ class AiConfigPage extends StatelessWidget {
         ),
       );
 
-  Widget _statusCard(LitertController c) => Card(
-        elevation: 0,
-        color: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(
-            color: c.isModelLoaded.value ? Colors.green[200]! : Colors.red[200]!,
-          ),
-        ),
-        child: ListTile(
-          leading: Icon(
-            c.isModelLoaded.value ? Icons.check_circle_rounded : Icons.error_outline_rounded,
-            color: c.isModelLoaded.value ? Colors.green : Colors.red,
-            size: 30,
-          ),
-          title: Text(
-            c.isModelLoaded.value ? 'Model Ready' : 'No Model Loaded',
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          subtitle: Text(
-            c.modelPath.value.isEmpty
-                ? 'Pick a model file below'
-                : c.modelPath.value.split('/').last,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      );
+  Widget _statusCard(LitertController c) {
+    final isDownloading = c.isDownloading.value;
+    final isLoaded = c.isModelLoaded.value;
+    final progress = c.downloadProgress.value;
+    final status = c.downloadStatus.value;
 
-  Widget _filePicker({
-    required String label,
-    required String hint,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) =>
-      OutlinedButton.icon(
-        onPressed: onTap,
-        icon: Icon(icon, color: color),
-        label: Column(
+    return Card(
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: isLoaded
+              ? Colors.green[200]!
+              : isDownloading
+                  ? Colors.blue[200]!
+                  : Colors.red[200]!,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
-            Text(hint, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+            Row(
+              children: [
+                Icon(
+                  isLoaded
+                      ? Icons.check_circle_rounded
+                      : isDownloading
+                          ? Icons.downloading_rounded
+                          : Icons.error_outline_rounded,
+                  color: isLoaded
+                      ? Colors.green
+                      : isDownloading
+                          ? Colors.blue
+                          : Colors.red,
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isLoaded
+                            ? 'Model Ready'
+                            : isDownloading
+                                ? 'Downloading Model…'
+                                : 'Model Not Ready',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      if (status.isNotEmpty)
+                        Text(
+                          status,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (isDownloading) ...[
+              const SizedBox(height: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  backgroundColor: Colors.blue[50],
+                  color: Colors.blue,
+                  minHeight: 6,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${(progress * 100).toStringAsFixed(1)}%',
+                style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+              ),
+            ],
           ],
         ),
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          side: BorderSide(color: color),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          alignment: Alignment.centerLeft,
-          minimumSize: const Size.fromHeight(56),
-        ),
-      );
+      ),
+    );
+  }
 
   Widget _mediaChip({
     required String label,
@@ -293,29 +297,13 @@ class AiConfigPage extends StatelessWidget {
 
   // ─── Actions ───────────────────────────────────────────────────────────────
 
-  Future<void> _pickModel() async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.any);
-    if (result != null && result.files.single.path != null) {
-      await controller.setModelPath(result.files.single.path!);
-    }
-  }
-
   Future<void> _pickImage() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-    );
-    if (result != null && result.files.single.path != null) {
-      _selectedImage.value = File(result.files.single.path!);
-    }
+    // image_picker not imported here – use file_picker for simplicity
+    Get.snackbar('Info', 'Use the analyzer pages to attach images.');
   }
 
   Future<void> _pickAudio() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.audio,
-    );
-    if (result != null && result.files.single.path != null) {
-      _selectedAudio.value = File(result.files.single.path!);
-    }
+    Get.snackbar('Info', 'Use the analyzer pages to attach audio.');
   }
 
   void _runInference() {

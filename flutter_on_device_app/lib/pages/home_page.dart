@@ -55,7 +55,9 @@ class HomePage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _header(),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 16),
+                        Obx(() => _downloadBanner()),
+                        const SizedBox(height: 16),
                         _heroSection(),
                         const SizedBox(height: 32),
                         _offlineConnectivityBanner(),
@@ -197,6 +199,102 @@ class HomePage extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _downloadBanner() {
+    final isDownloading = aiController.isDownloading.value;
+    final isLoaded = aiController.isModelLoaded.value;
+    final isLoading = aiController.isLoading.value;
+    final progress = aiController.downloadProgress.value;
+    final status = aiController.downloadStatus.value;
+
+    // Hide banner once model is fully loaded.
+    if (isLoaded) return const SizedBox.shrink();
+
+    final Color bannerColor = isDownloading ? Colors.blue[700]! : Colors.orange[700]!;
+    final IconData icon = isDownloading
+        ? Icons.downloading_rounded
+        : isLoading
+            ? Icons.memory_rounded
+            : Icons.cloud_download_outlined;
+    final String title = isDownloading
+        ? 'Downloading AI Model…'
+        : isLoading
+            ? 'Loading Model into Memory…'
+            : 'Model Initializing…';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [bannerColor, bannerColor.withValues(alpha: 0.8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: Colors.white, size: 22),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                    if (status.isNotEmpty)
+                      Text(
+                        status,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
+                ),
+              ),
+              if (isDownloading || isLoading)
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                ),
+            ],
+          ),
+          if (isDownloading) ...[
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: progress,
+                backgroundColor: Colors.white24,
+                color: Colors.white,
+                minHeight: 5,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${(progress * 100).toStringAsFixed(1)}%  •  Savemom AI Model (4B)',
+              style: const TextStyle(color: Colors.white70, fontSize: 11),
+            ),
+          ],
+        ],
+      ),
     );
   }
 

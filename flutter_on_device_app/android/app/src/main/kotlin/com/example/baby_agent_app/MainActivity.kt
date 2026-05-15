@@ -77,26 +77,26 @@ class MainActivity: FlutterActivity() {
                     engine?.close()
                 }
                 engine = null
-                
-                val backend = when(backendStr.uppercase()) {
+
+                val requestedBackend = when(backendStr.uppercase()) {
                     "CPU" -> Backend.CPU()
                     "NPU" -> Backend.NPU()
-                    else -> Backend.GPU()
+                    else  -> Backend.GPU()
                 }
-                
-                val engineConfig = EngineConfig(
-                    modelPath = path,
-                    backend = backend,
-                    visionBackend = backend,
-                    audioBackend = Backend.CPU()
-                )
-                
-                val newEngine = Engine(engineConfig)
-                newEngine.initialize()
-                engine = newEngine
-                
-                withContext(Dispatchers.Main) {
-                    result.success(true)
+
+                // Try with the requested backend first; fall back to CPU if GPU/NPU fails.
+                val loadedEngine = tryLoadEngine(path, requestedBackend)
+                    ?: tryLoadEngine(path, Backend.CPU())
+
+                if (loadedEngine != null) {
+                    engine = loadedEngine
+                    withContext(Dispatchers.Main) {
+                        result.success(true)
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        result.error("LOAD_ERROR", "Failed to initialize engine on all backends", null)
+                    }
                 }
             } catch (e: Exception) {
                 engine = null
@@ -106,6 +106,24 @@ class MainActivity: FlutterActivity() {
             }
         }
     }
+
+    private fun tryLoadEngine(path: String, backend: Backend): Engine? {
+        return try {
+            val config = EngineConfig(
+                modelPath    = path,
+                backend      = backend,
+                visionBackend = backend,
+                audioBackend  = Backend.CPU()   // audio always on CPU (safe default)
+            )
+            val eng = Engine(config)
+            eng.initialize()
+            eng
+        } catch (e: Exception) {
+            android.util.Log.w("LiteRT", "Backend ${backend::class.simpleName} failed: ${e.message}. Will try next.")
+            null
+        }
+    }
+
     
     private fun runInference(prompt: String, imagePath: String?, audioPath: String?, systemInstructions: String?, result: MethodChannel.Result) {
         if (engine?.isInitialized() != true) {
