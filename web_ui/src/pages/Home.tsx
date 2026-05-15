@@ -101,7 +101,7 @@ const Home = () => {
               <ShieldCheck className="w-7 h-7 text-white" />
             </div>
             <h1 className="text-3xl font-black tracking-tight text-slate-900">
-              SaveMom <span className="text-cyan-700">Preventive Agent</span>
+              <span className="text-cyan-700">Neo Scan Agents</span>
             </h1>
           </div>
           <p className="text-slate-500 max-w-lg font-medium">
