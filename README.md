@@ -531,21 +531,18 @@ NeoScan does not require infrastructure investment, specialist training, or recu
 ---
 
 
-## AlloMonotiring UI
+## AlloMonitor Clinical Dashboard
 
+📄 [Download PDF](./AlloMonitor_Neonatal_Clinical_Dashboard.pdf)
 
-[View PDF](AlloMonitor   Neonatal Clinical Dashboard.pdf)
+🖥️ **Embedded viewer** — open the web app and navigate to `/dashboard` to see the full interactive PDF dashboard inline.
 
-## Clinical Dashboard PDF
+### Dashboard Screenshots
 
-📄 [Open AlloMonitor Neonatal Clinical Dashboard](./AlloMonitor_Neonatal_Clinical_Dashboard.pdf)
-
-
-<iframe
-    src="./AlloMonitor_Neonatal_Clinical_Dashboard.pdf"
-    width="100%"
-    height="700px">
-</iframe>
+![AlloMonitor Dashboard 1](./demo/image/alloMonitoring/1.png)
+![AlloMonitor Dashboard 2](./demo/image/alloMonitoring/2.png)
+![AlloMonitor Dashboard 3](./demo/image/alloMonitoring/3.png)
+![AlloMonitor Dashboard 4](./demo/image/alloMonitoring/4.png)
 
 
 *Built for the Google Gemma Hackathon by the SaveMom Team.*
